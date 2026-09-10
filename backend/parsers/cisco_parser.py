@@ -4,23 +4,12 @@ from pathlib import Path
 
 class CiscoConfigParser:
     """
-    Basic Cisco IOS XE configuration parser.
+    Cisco IOS XE configuration parser.
 
-    Current scope:
-    - Device hostname
-    - Domain name
-    - AAA
-    - AAA login authentication
-    - Local users
-    - Password encryption
-    - SSH timeout
-    - SSH authentication retries
-    - VTY configuration
-    - DHCP service
-    - Logging
-    - NTP authentication
+    Converts Cisco-specific configuration syntax
+    into the NetAdapt canonical configuration model.
 
-    This parser extracts configuration meaning.
+    This parser ONLY extracts configuration state.
     It does NOT perform compliance checks.
     """
 
@@ -29,7 +18,7 @@ class CiscoConfigParser:
 
     def _empty_config(self):
         """
-        Create a fresh normalized configuration structure.
+        Create a fresh canonical configuration structure.
         """
 
         return {
@@ -44,9 +33,12 @@ class CiscoConfigParser:
                 "local_users": []
             },
 
-            "ssh": {
-                "timeout": None,
-                "authentication_retries": None,
+            "management": {
+                "ssh": {
+                    "timeout": None,
+                    "authentication_retries": None
+                },
+
                 "vty": []
             },
 
@@ -57,7 +49,10 @@ class CiscoConfigParser:
 
             "logging": {
                 "enabled": False,
-                "buffered": None
+                "buffered": {
+                    "enabled": False,
+                    "size": None
+                }
             },
 
             "ntp": {
@@ -83,11 +78,10 @@ class CiscoConfigParser:
 
     def parse(self, config_text):
         """
-        Parse Cisco configuration text.
+        Parse Cisco IOS XE configuration text
+        into the canonical NetAdapt model.
         """
 
-        # Start with a clean configuration every time parse()
-        # is called.
         self.config = self._empty_config()
 
         current_context = None
@@ -98,12 +92,11 @@ class CiscoConfigParser:
         for raw_line in lines:
 
             # -----------------------------------------
-            # Preserve indentation
+            # Basic line handling
             # -----------------------------------------
 
             stripped_line = raw_line.strip()
 
-            # Ignore empty lines and Cisco comments/separators
             if not stripped_line or stripped_line.startswith("!"):
                 continue
 
@@ -137,11 +130,13 @@ class CiscoConfigParser:
                     "line_range": f"{start}-{end}",
                     "transport": [],
                     "access_class": None,
-                    "exec_timeout": None,
+                    "exec_timeout_seconds": None,
                     "login_authentication": None
                 }
 
-                self.config["ssh"]["vty"].append(current_vty)
+                self.config["management"]["vty"].append(
+                    current_vty
+                )
 
                 continue
 
@@ -150,7 +145,6 @@ class CiscoConfigParser:
             # -----------------------------------------
 
             if not is_indented:
-
                 current_context = None
                 current_vty = None
 
@@ -202,10 +196,15 @@ class CiscoConfigParser:
                     minutes = int(timeout_match.group(1))
                     seconds = int(timeout_match.group(2))
 
-                    current_vty["exec_timeout"] = {
-                        "minutes": minutes,
-                        "seconds": seconds
-                    }
+                    # Convert vendor-specific Cisco
+                    # representation into canonical seconds.
+                    total_seconds = (
+                        minutes * 60
+                    ) + seconds
+
+                    current_vty["exec_timeout_seconds"] = (
+                        total_seconds
+                    )
 
                     continue
 
@@ -231,7 +230,9 @@ class CiscoConfigParser:
             # aaa new-model
             if line.lower() == "aaa new-model":
 
-                self.config["authentication"]["aaa_enabled"] = True
+                self.config["authentication"][
+                    "aaa_enabled"
+                ] = True
 
                 continue
 
@@ -241,9 +242,6 @@ class CiscoConfigParser:
             ):
 
                 parts = line.split()
-
-                # Expected:
-                # aaa authentication login <method-list> <method> ...
 
                 if len(parts) >= 5:
 
@@ -335,12 +333,12 @@ class CiscoConfigParser:
                 if len(parts) >= 4:
 
                     try:
+
                         value = int(parts[-1])
 
-                        self.config["ssh"]["timeout"] = {
-                            "value": value,
-                            "unit": "seconds"
-                        }
+                        self.config["management"]["ssh"][
+                            "timeout"
+                        ] = value
 
                     except ValueError:
                         pass
@@ -357,9 +355,10 @@ class CiscoConfigParser:
                 if len(parts) >= 4:
 
                     try:
+
                         value = int(parts[-1])
 
-                        self.config["ssh"][
+                        self.config["management"]["ssh"][
                             "authentication_retries"
                         ] = value
 
@@ -376,13 +375,16 @@ class CiscoConfigParser:
                 continue
 
             # logging buffered 64000
-            if line.lower().startswith("logging buffered "):
+            if line.lower().startswith(
+                "logging buffered "
+            ):
 
                 parts = line.split()
 
                 if len(parts) >= 3:
 
                     try:
+
                         value = int(parts[-1])
 
                         self.config["logging"]["buffered"] = {

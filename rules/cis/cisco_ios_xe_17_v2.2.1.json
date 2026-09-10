@@ -11,14 +11,17 @@
       "title": "Enable aaa new-model",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "boolean",
-        "command": "aaa new-model",
+
+      "target": {
+        "path": "authentication.aaa_enabled",
+        "type": "boolean"
+      },
+
+      "condition": {
+        "operator": "equals",
         "expected": true
       },
-      "audit": {
-        "command": "show running-config | include aaa new-model"
-      },
+
       "remediation": {
         "commands": ["aaa new-model"]
       }
@@ -29,14 +32,16 @@
       "title": "Enable aaa authentication login",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "command_presence",
-        "command": "aaa authentication login",
-        "expected": true
+
+      "target": {
+        "path": "authentication.login_authentication",
+        "type": "object"
       },
-      "audit": {
-        "command": "show running-config | include aaa authentication login"
+
+      "condition": {
+        "operator": "exists"
       },
+
       "remediation": {
         "commands": [
           "aaa authentication login <method-list> <authentication-method>"
@@ -49,13 +54,17 @@
       "title": "Set transport input ssh for line vty connections",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "vty_transport",
-        "expected": ["ssh"]
+
+      "target": {
+        "path": "management.vty[*].transport",
+        "type": "list"
       },
-      "audit": {
-        "command": "show running-config | section line vty"
+
+      "condition": {
+        "operator": "contains",
+        "expected": "ssh"
       },
+
       "remediation": {
         "commands": ["line vty <line-range>", "transport input ssh"]
       }
@@ -66,13 +75,16 @@
       "title": "Set access-class for line vty",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "vty_access_class",
-        "expected": true
+
+      "target": {
+        "path": "management.vty[*].access_class",
+        "type": "value"
       },
-      "audit": {
-        "command": "show running-config | section line vty"
+
+      "condition": {
+        "operator": "exists"
       },
+
       "remediation": {
         "commands": [
           "line vty <line-range>",
@@ -86,15 +98,18 @@
       "title": "Set exec-timeout to <=10 min line vty",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "duration",
-        "scope": "line_vty",
-        "operator": "<=",
-        "expected_minutes": 10
+
+      "target": {
+        "path": "management.vty[*].exec_timeout_seconds",
+        "type": "number",
+        "unit": "seconds"
       },
-      "audit": {
-        "command": "show running-config all | section line vty"
+
+      "condition": {
+        "operator": "less_than_or_equal",
+        "expected": 600
       },
+
       "remediation": {
         "commands": ["line vty <line-range>", "exec-timeout 10 0"]
       }
@@ -105,14 +120,17 @@
       "title": "Enable service password-encryption",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "boolean",
-        "command": "service password-encryption",
+
+      "target": {
+        "path": "services.password_encryption",
+        "type": "boolean"
+      },
+
+      "condition": {
+        "operator": "equals",
         "expected": true
       },
-      "audit": {
-        "command": "show running-config | include service password-encryption"
-      },
+
       "remediation": {
         "commands": ["service password-encryption"]
       }
@@ -123,13 +141,17 @@
       "title": "Set username secret for all local users",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "local_user_secret",
-        "expected": true
+
+      "target": {
+        "path": "authentication.local_users[*].credential_type",
+        "type": "list"
       },
-      "audit": {
-        "command": "show running-config | include username"
+
+      "condition": {
+        "operator": "all_equals",
+        "expected": "secret"
       },
+
       "remediation": {
         "commands": ["username <LOCAL_USERNAME> secret <LOCAL_PASSWORD>"]
       }
@@ -140,13 +162,16 @@
       "title": "Set hostname",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "hostname",
-        "expected": true
+
+      "target": {
+        "path": "device.hostname",
+        "type": "string"
       },
-      "audit": {
-        "command": "show running-config | include hostname"
+
+      "condition": {
+        "operator": "exists"
       },
+
       "remediation": {
         "commands": ["hostname <router_name>"]
       }
@@ -157,13 +182,16 @@
       "title": "Set ip domain-name",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "domain_name",
-        "expected": true
+
+      "target": {
+        "path": "device.domain_name",
+        "type": "string"
       },
-      "audit": {
-        "command": "show running-config | include domain-name"
+
+      "condition": {
+        "operator": "exists"
       },
+
       "remediation": {
         "commands": ["ip domain-name <domain-name>"]
       }
@@ -174,15 +202,18 @@
       "title": "Set SSH timeout to 60 seconds or less",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "integer",
-        "command": "ip ssh time-out",
-        "operator": "<=",
-        "expected_seconds": 60
+
+      "target": {
+        "path": "management.ssh.timeout",
+        "type": "number",
+        "unit": "seconds"
       },
-      "audit": {
-        "command": "show ip ssh"
+
+      "condition": {
+        "operator": "less_than_or_equal",
+        "expected": 60
       },
+
       "remediation": {
         "commands": ["ip ssh time-out 60"]
       }
@@ -193,15 +224,17 @@
       "title": "Set SSH authentication retries to 3 or less",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "integer",
-        "command": "ip ssh authentication-retries",
-        "operator": "<=",
-        "expected_retries": 3
+
+      "target": {
+        "path": "management.ssh.authentication_retries",
+        "type": "number"
       },
-      "audit": {
-        "command": "show ip ssh"
+
+      "condition": {
+        "operator": "less_than_or_equal",
+        "expected": 3
       },
+
       "remediation": {
         "commands": ["ip ssh authentication-retries 3"]
       }
@@ -212,14 +245,17 @@
       "title": "Disable DHCP service",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "boolean",
-        "command": "no service dhcp",
-        "expected": true
+
+      "target": {
+        "path": "services.dhcp",
+        "type": "boolean"
       },
-      "audit": {
-        "command": "show running-config | include dhcp"
+
+      "condition": {
+        "operator": "equals",
+        "expected": false
       },
+
       "remediation": {
         "commands": ["no service dhcp"]
       }
@@ -230,14 +266,17 @@
       "title": "Enable logging",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "boolean",
-        "command": "logging enable",
+
+      "target": {
+        "path": "logging.enabled",
+        "type": "boolean"
+      },
+
+      "condition": {
+        "operator": "equals",
         "expected": true
       },
-      "audit": {
-        "command": "show running-config | include logging"
-      },
+
       "remediation": {
         "commands": ["archive", "log config", "logging enable", "end"]
       }
@@ -248,14 +287,18 @@
       "title": "Configure logging buffered",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "integer",
-        "command": "logging buffered",
-        "expected_size": 64000
+
+      "target": {
+        "path": "logging.buffered.size",
+        "type": "number",
+        "unit": "bytes"
       },
-      "audit": {
-        "command": "show running-config | include logging buffered"
+
+      "condition": {
+        "operator": "greater_than_or_equal",
+        "expected": 64000
       },
+
       "remediation": {
         "commands": ["logging buffered 64000"]
       }
@@ -266,14 +309,17 @@
       "title": "Enable NTP authentication",
       "assessment_status": "Automated",
       "profile": "Level 1",
-      "control": {
-        "type": "boolean",
-        "command": "ntp authenticate",
+
+      "target": {
+        "path": "ntp.authentication_enabled",
+        "type": "boolean"
+      },
+
+      "condition": {
+        "operator": "equals",
         "expected": true
       },
-      "audit": {
-        "command": "show running-config | include ntp"
-      },
+
       "remediation": {
         "commands": ["ntp authenticate"]
       }
