@@ -1,0 +1,282 @@
+{
+  "framework": "CIS",
+  "benchmark": "Cisco IOS XE 17.x",
+  "benchmark_version": "2.2.1",
+  "vendor": "Cisco",
+  "platform": "IOS XE",
+
+  "rules": [
+    {
+      "rule_id": "1.1.1",
+      "title": "Enable aaa new-model",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "boolean",
+        "command": "aaa new-model",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include aaa new-model"
+      },
+      "remediation": {
+        "commands": ["aaa new-model"]
+      }
+    },
+
+    {
+      "rule_id": "1.1.2",
+      "title": "Enable aaa authentication login",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "command_presence",
+        "command": "aaa authentication login",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include aaa authentication login"
+      },
+      "remediation": {
+        "commands": [
+          "aaa authentication login <method-list> <authentication-method>"
+        ]
+      }
+    },
+
+    {
+      "rule_id": "1.2.2",
+      "title": "Set transport input ssh for line vty connections",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "vty_transport",
+        "expected": ["ssh"]
+      },
+      "audit": {
+        "command": "show running-config | section line vty"
+      },
+      "remediation": {
+        "commands": ["line vty <line-range>", "transport input ssh"]
+      }
+    },
+
+    {
+      "rule_id": "1.2.5",
+      "title": "Set access-class for line vty",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "vty_access_class",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | section line vty"
+      },
+      "remediation": {
+        "commands": [
+          "line vty <line-range>",
+          "access-class <vty_acl_number> in"
+        ]
+      }
+    },
+
+    {
+      "rule_id": "1.2.8",
+      "title": "Set exec-timeout to <=10 min line vty",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "duration",
+        "scope": "line_vty",
+        "operator": "<=",
+        "expected_minutes": 10
+      },
+      "audit": {
+        "command": "show running-config all | section line vty"
+      },
+      "remediation": {
+        "commands": ["line vty <line-range>", "exec-timeout 10 0"]
+      }
+    },
+
+    {
+      "rule_id": "1.4.2",
+      "title": "Enable service password-encryption",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "boolean",
+        "command": "service password-encryption",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include service password-encryption"
+      },
+      "remediation": {
+        "commands": ["service password-encryption"]
+      }
+    },
+
+    {
+      "rule_id": "1.4.3",
+      "title": "Set username secret for all local users",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "local_user_secret",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include username"
+      },
+      "remediation": {
+        "commands": ["username <LOCAL_USERNAME> secret <LOCAL_PASSWORD>"]
+      }
+    },
+
+    {
+      "rule_id": "2.1.1.1.1",
+      "title": "Set hostname",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "hostname",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include hostname"
+      },
+      "remediation": {
+        "commands": ["hostname <router_name>"]
+      }
+    },
+
+    {
+      "rule_id": "2.1.1.1.2",
+      "title": "Set ip domain-name",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "domain_name",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include domain-name"
+      },
+      "remediation": {
+        "commands": ["ip domain-name <domain-name>"]
+      }
+    },
+
+    {
+      "rule_id": "2.1.1.1.4",
+      "title": "Set SSH timeout to 60 seconds or less",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "integer",
+        "command": "ip ssh time-out",
+        "operator": "<=",
+        "expected_seconds": 60
+      },
+      "audit": {
+        "command": "show ip ssh"
+      },
+      "remediation": {
+        "commands": ["ip ssh time-out 60"]
+      }
+    },
+
+    {
+      "rule_id": "2.1.1.1.5",
+      "title": "Set SSH authentication retries to 3 or less",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "integer",
+        "command": "ip ssh authentication-retries",
+        "operator": "<=",
+        "expected_retries": 3
+      },
+      "audit": {
+        "command": "show ip ssh"
+      },
+      "remediation": {
+        "commands": ["ip ssh authentication-retries 3"]
+      }
+    },
+
+    {
+      "rule_id": "2.1.4",
+      "title": "Disable DHCP service",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "boolean",
+        "command": "no service dhcp",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include dhcp"
+      },
+      "remediation": {
+        "commands": ["no service dhcp"]
+      }
+    },
+
+    {
+      "rule_id": "2.2.1",
+      "title": "Enable logging",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "boolean",
+        "command": "logging enable",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include logging"
+      },
+      "remediation": {
+        "commands": ["archive", "log config", "logging enable", "end"]
+      }
+    },
+
+    {
+      "rule_id": "2.2.2",
+      "title": "Configure logging buffered",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "integer",
+        "command": "logging buffered",
+        "expected_size": 64000
+      },
+      "audit": {
+        "command": "show running-config | include logging buffered"
+      },
+      "remediation": {
+        "commands": ["logging buffered 64000"]
+      }
+    },
+
+    {
+      "rule_id": "2.3.1.1",
+      "title": "Enable NTP authentication",
+      "assessment_status": "Automated",
+      "profile": "Level 1",
+      "control": {
+        "type": "boolean",
+        "command": "ntp authenticate",
+        "expected": true
+      },
+      "audit": {
+        "command": "show running-config | include ntp"
+      },
+      "remediation": {
+        "commands": ["ntp authenticate"]
+      }
+    }
+  ]
+}
